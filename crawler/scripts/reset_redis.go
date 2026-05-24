@@ -4,12 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/aditya-sutar-45/search--/crawler/frontier"
 	"github.com/redis/go-redis/v9"
-)
-
-const (
-	QUEUE_KEY       = "crawler_queue"
-	VISITED_SET_KEY = "visited_urls"
 )
 
 func main() {
@@ -21,8 +17,8 @@ func main() {
 
 	err := client.Del(
 		ctx,
-		QUEUE_KEY,
-		VISITED_SET_KEY,
+		frontier.QUEUE_KEY,
+		frontier.VISITED_SET_KEY,
 	).Err()
 	if err != nil {
 		log.Fatalf("ERROR clearing redis keys: %v", err)
