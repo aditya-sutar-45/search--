@@ -9,3 +9,6 @@ start:
 
 tidy:
 	go mod tidy
+
+clear_redis:
+	go run scripts/reset_redis.go

@@ -41,7 +41,7 @@ func (c *Crawler) StartCrawling() {
 }
 
 func (c *Crawler) Crawl(url string) error {
-	response, err := c.downloader.Download(url)
+	response, statusCode, contentType, err := c.downloader.Download(url)
 	if err != nil {
 		return fmt.Errorf("error downloading content from url: %v", err)
 	}
@@ -52,7 +52,7 @@ func (c *Crawler) Crawl(url string) error {
 		return fmt.Errorf("error generating a goquery document: %v", err)
 	}
 
-	p := parser.NewParser(document, url)
+	p := parser.NewParser(document, url, statusCode, contentType)
 	page := p.Parse()
 
 	log.Printf("INFO crawled: %s found %v URL's", url, len(page.Links))
@@ -79,6 +79,10 @@ func (c *Crawler) requeueURLs(urls []string) {
 
 func (c *Crawler) Seed(seedURLs []string) {
 	for _, url := range seedURLs {
+		if c.visistedSet.IsVisited(url) {
+			log.Printf("INFO already visisted %s\n", url)
+			continue
+		}
 		err := c.queue.Enqueue(url)
 		if err != nil {
 			log.Printf("ERROR seeding url %s: %v\n", url, err)

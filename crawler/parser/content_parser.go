@@ -10,11 +10,13 @@ import (
 )
 
 type Parser struct {
-	Document *goquery.Document
-	URL      string
+	Document    *goquery.Document
+	URL         string
+	StatusCode  int
+	ContentType string
 }
 
-func NewParser(doc *goquery.Document, url string) *Parser {
+func NewParser(doc *goquery.Document, url string, statusCode int, contentType string) *Parser {
 	return &Parser{
 		Document: doc,
 		URL:      url,
@@ -74,16 +76,52 @@ func (p *Parser) GetNormalizedURLs() []string {
 	return urls
 }
 
+func (p *Parser) GetContent() string {
+	var content strings.Builder
+
+	p.Document.Find(
+		"script, style, noscript, nav, footer, header, aside",
+	).Remove()
+
+	p.Document.Find(
+		"article p, main p, p, h1, h2, h3, h4, h5, h6",
+	).Each(func(i int, s *goquery.Selection) {
+		text := strings.TrimSpace(s.Text())
+
+		if text != "" {
+			content.WriteString(text)
+			content.WriteString(" ")
+		}
+	})
+
+	return strings.Join(strings.Fields(content.String()), " ")
+}
+
+func (p *Parser) GetDomain() string {
+	parsedURL, err := url.Parse(p.URL)
+	if err != nil {
+		return ""
+	}
+
+	return parsedURL.Host
+}
+
 func (p *Parser) Parse() *Page {
 	pageTitle := p.GetTitle()
 	metaDesc := p.GetMetaDescription()
 	normalizedURLs := p.GetNormalizedURLs()
+	content := p.GetContent()
+	domain := p.GetDomain()
 
 	page := NewPage(
 		pageTitle,
 		metaDesc,
 		p.URL,
 		normalizedURLs,
+		content,
+		domain,
+		p.StatusCode,
+		p.ContentType,
 	)
 
 	return page

@@ -25,10 +25,10 @@ func NewHTMLDownloader() *HTMLDownloader {
 	}
 }
 
-func (h *HTMLDownloader) Download(url string) (*http.Response, error) {
+func (h *HTMLDownloader) Download(url string) (*http.Response, int, string, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, "", err
 	}
 
 	for key, value := range h.headers {
@@ -37,8 +37,11 @@ func (h *HTMLDownloader) Download(url string) (*http.Response, error) {
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, 0, "", err
 	}
 
-	return response, nil
+	statusCode := response.StatusCode
+	contentType := response.Header.Get("Content-Type")
+
+	return response, statusCode, contentType, nil
 }
