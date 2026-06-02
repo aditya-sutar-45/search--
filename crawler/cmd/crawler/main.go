@@ -20,12 +20,18 @@ func main() {
 	defer mongoConn.Disconnect()
 
 	redisConn := frontier.NewRedisConnection("localhost:6379")
+
+	pageRepo, err := storage.NewPageRepository(mongoConn)
+	if err != nil {
+		log.Fatalf("ERROR error creating page repository: %v\n", err)
+	}
+
 	seedURLs := []string{
 		"https://en.wikipedia.org/wiki/Chicken",
 		"https://detailed.com/50/",
 	}
 
-	c := crawl.NewCrawler(redisConn)
+	c := crawl.NewCrawler(redisConn, pageRepo)
 	c.Seed(seedURLs)
 
 	c.StartCrawling()
