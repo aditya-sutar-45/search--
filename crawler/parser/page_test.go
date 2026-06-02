@@ -3,6 +3,8 @@ package parser
 import (
 	"fmt"
 	"io"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
@@ -26,7 +28,7 @@ func TestPageParsing(t *testing.T) {
 	}
 	rawHTML := string(body)
 
-	document, err := goquery.NewDocumentFromReader(response.Body)
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(rawHTML))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,6 +45,11 @@ func TestPageParsing(t *testing.T) {
 		response.StatusCode,
 		response.Header.Get("Content-Type"),
 	)
+
+	if len(page.Links) == 0 {
+		log.Println("INFO no links found")
+		t.Fail()
+	}
 
 	fmt.Println("===================================")
 	fmt.Println("TITLE:", page.Title)

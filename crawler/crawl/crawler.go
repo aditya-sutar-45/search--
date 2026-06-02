@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aditya-sutar-45/search--/crawler/frontier"
 	"github.com/aditya-sutar-45/search--/crawler/htmldownloader"
 	"github.com/aditya-sutar-45/search--/crawler/parser"
+	"github.com/aditya-sutar-45/search--/crawler/storage"
 	"github.com/aditya-sutar-45/search--/crawler/utils"
 )
 
@@ -16,13 +18,15 @@ type Crawler struct {
 	queue       *frontier.Queue
 	visistedSet *frontier.VisistedSet
 	downloader  *htmldownloader.HTMLDownloader
+	PageRepo    *storage.PageRepository
 }
 
-func NewCrawler(r *frontier.ReddisConnection) *Crawler {
+func NewCrawler(r *frontier.ReddisConnection, p *storage.PageRepository) *Crawler {
 	return &Crawler{
 		queue:       frontier.NewQueue(r),
 		visistedSet: frontier.NewVisistedSet(r),
 		downloader:  htmldownloader.NewHTMLDownloader(),
+		PageRepo:    p,
 	}
 }
 
@@ -54,13 +58,18 @@ func (c *Crawler) Crawl(url string) error {
 	}
 	rawHTML := string(body)
 
-	document, err := goquery.NewDocumentFromReader(response.Body)
+	document, err := goquery.NewDocumentFromReader(strings.NewReader(rawHTML))
 	if err != nil {
 		return fmt.Errorf("error generating a goquery document: %v", err)
 	}
 
 	p := parser.NewParser(document, rawHTML, url, statusCode, contentType)
 	page := p.Parse()
+
+	err = c.PageRepo.SaveOrUpdate(page)
+	if err != nil {
+		return fmt.Errorf("error saving page with url %s to mongo db: %v", page.URL, err)
+	}
 
 	log.Printf("INFO crawled: %s found %v URL's", url, len(page.Links))
 
