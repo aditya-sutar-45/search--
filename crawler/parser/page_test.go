@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
@@ -19,19 +20,25 @@ func TestPageParsing(t *testing.T) {
 	}
 	defer utils.CloseResponseBody(response)
 
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rawHTML := string(body)
+
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	parser := NewParser(document, url, statusCode, contentType)
+	parser := NewParser(document, rawHTML, url, statusCode, contentType)
 
 	page := NewPage(
 		parser.GetTitle(),
 		parser.GetMetaDescription(),
 		url,
 		parser.GetNormalizedURLs(),
-		parser.GetContent(),
+		parser.RawHTML,
 		parser.GetDomain(),
 		response.StatusCode,
 		response.Header.Get("Content-Type"),
@@ -47,10 +54,10 @@ func TestPageParsing(t *testing.T) {
 	fmt.Println("URL HASH:", page.URLHash)
 
 	fmt.Println("\nCONTENT PREVIEW:")
-	if len(page.Content) > 1000 {
-		fmt.Println(page.Content[:1000] + "...")
+	if len(page.RawHTMl) > 1000 {
+		fmt.Println(page.RawHTMl[:1000] + "...")
 	} else {
-		fmt.Println(page.Content)
+		fmt.Println(page.RawHTMl)
 	}
 
 	fmt.Println("\nLINK COUNT:", len(page.Links))

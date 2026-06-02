@@ -2,6 +2,7 @@ package crawl
 
 import (
 	"fmt"
+	"io"
 	"log"
 
 	"github.com/PuerkitoBio/goquery"
@@ -47,12 +48,18 @@ func (c *Crawler) Crawl(url string) error {
 	}
 	defer utils.CloseResponseBody(response)
 
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("error reading response body: %v", err)
+	}
+	rawHTML := string(body)
+
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		return fmt.Errorf("error generating a goquery document: %v", err)
 	}
 
-	p := parser.NewParser(document, url, statusCode, contentType)
+	p := parser.NewParser(document, rawHTML, url, statusCode, contentType)
 	page := p.Parse()
 
 	log.Printf("INFO crawled: %s found %v URL's", url, len(page.Links))

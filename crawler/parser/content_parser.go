@@ -11,15 +11,19 @@ import (
 
 type Parser struct {
 	Document    *goquery.Document
+	RawHTML     string
 	URL         string
 	StatusCode  int
 	ContentType string
 }
 
-func NewParser(doc *goquery.Document, url string, statusCode int, contentType string) *Parser {
+func NewParser(doc *goquery.Document, rawHTML string, url string, statusCode int, contentType string) *Parser {
 	return &Parser{
-		Document: doc,
-		URL:      url,
+		Document:    doc,
+		RawHTML:     rawHTML,
+		URL:         url,
+		StatusCode:  statusCode,
+		ContentType: contentType,
 	}
 }
 
@@ -110,7 +114,6 @@ func (p *Parser) Parse() *Page {
 	pageTitle := p.GetTitle()
 	metaDesc := p.GetMetaDescription()
 	normalizedURLs := p.GetNormalizedURLs()
-	content := p.GetContent()
 	domain := p.GetDomain()
 
 	page := NewPage(
@@ -118,7 +121,7 @@ func (p *Parser) Parse() *Page {
 		metaDesc,
 		p.URL,
 		normalizedURLs,
-		content,
+		p.RawHTML,
 		domain,
 		p.StatusCode,
 		p.ContentType,

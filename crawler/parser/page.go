@@ -13,7 +13,7 @@ type Page struct {
 	URLHash         string
 	Links           []string
 
-	Content string
+	RawHTMl string
 	Domain  string
 
 	StatusCode  int
@@ -27,7 +27,7 @@ func NewPage(
 	metaDescription string,
 	url string,
 	links []string,
-	content string,
+	rawHTML string,
 	domain string,
 	statusCode int,
 	contentType string,
@@ -41,8 +41,9 @@ func NewPage(
 		URLHash:         urlHash,
 		Links:           links,
 
-		Content:     content,
-		Domain:      domain,
+		RawHTMl: rawHTML,
+		Domain:  domain,
+
 		StatusCode:  statusCode,
 		ContentType: contentType,
 
